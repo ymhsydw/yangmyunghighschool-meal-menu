@@ -1,0 +1,634 @@
+```html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>양명고등학교 식단표</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 40px;
+      font-family: "Malgun Gothic", sans-serif;
+      color: #243047;
+      background: linear-gradient(135deg, #edf2ff, #f7f0ff);
+      min-height: 100vh;
+    }
+
+    .container { max-width: 850px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      color: white;
+      padding: 30px 16px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #4568dc, #7952c7);
+      box-shadow: 0 10px 28px #4e55a52a;
+      margin-bottom: 22px;
+    }
+
+    header h1 {
+      font-size: clamp(24px, 5vw, 34px);
+      margin: 0 0 10px;
+    }
+
+    header p { margin: 0; opacity: .9; font-size: 14px; }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 20px #283b6810;
+    }
+
+    .date-picker {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #d9deed;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 12px;
+      background: white;
+      color: #243047;
+    }
+
+    .button-row { display: flex; gap: 9px; margin-bottom: 12px; }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 15px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { opacity: .9; }
+
+    .secondary-button {
+      flex: 1;
+      background: #eef1ff;
+      color: #4d56a7;
+    }
+
+    .main-button {
+      width: 100%;
+      color: white;
+      background: linear-gradient(135deg, #4568dc, #7952c7);
+      padding: 16px;
+      font-size: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 16px;
+      font-size: 20px;
+      color: #303b59;
+    }
+
+    .status {
+      padding: 18px;
+      border-radius: 14px;
+      line-height: 1.7;
+      font-size: 15px;
+      background: #f3f5fb;
+      overflow-wrap: anywhere;
+    }
+
+    .status.info { background: #edf2ff; color: #344d9c; }
+    .status.warning { background: #fff4e6; color: #925519; }
+    .status.error { background: #fff0f0; color: #b42332; }
+    .status.success { background: #edf9f1; color: #236c40; }
+
+    .meal-type {
+      display: inline-block;
+      padding: 6px 11px;
+      border-radius: 20px;
+      background: #eeeaff;
+      color: #6546b5;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .menu-list { list-style: none; padding: 0; margin: 0; }
+
+    .menu-list li {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 11px 0;
+      border-bottom: 1px solid #edf0f6;
+      line-height: 1.6;
+    }
+
+    .menu-list li:last-child { border-bottom: none; }
+    .menu-name { flex: 1; min-width: 130px; }
+
+    .allergy-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      background: #fff0e8;
+      color: #bd5a27;
+      white-space: nowrap;
+    }
+
+    .info-line {
+      font-size: 14px;
+      color: #68738b;
+      line-height: 1.8;
+      overflow-wrap: anywhere;
+    }
+
+    .allergy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .allergy-item {
+      padding: 10px 9px;
+      background: #f6f7fc;
+      border-radius: 10px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .allergy-number {
+      display: inline-flex;
+      flex: 0 0 24px;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      background: #e6eaff;
+      color: #4859ad;
+      font-weight: 700;
+    }
+
+    .allergy-name { overflow-wrap: anywhere; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 600px) {
+      body { padding: 14px 10px 28px; }
+      .card { padding: 17px; border-radius: 16px; }
+      .button-row { gap: 7px; }
+      button { padding: 12px 8px; font-size: 13px; }
+      .allergy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header>
+      <h1>양명고등학교 식단표</h1>
+      <p>날짜별 급식 및 알레르기 정보</p>
+    </header>
+
+    <section class="card">
+      <h2 class="section-title">날짜 선택</h2>
+      <input type="date" id="dateInput" class="date-picker"
+             aria-label="급식 조회 날짜">
+
+      <div class="button-row">
+        <button class="secondary-button" id="prevButton">이전 평일</button>
+        <button class="secondary-button" id="todayButton">오늘 날짜</button>
+        <button class="secondary-button" id="nextButton">다음 평일</button>
+      </div>
+
+      <button class="main-button" id="searchButton">
+        선택한 날짜 급식 조회
+      </button>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">급식 안내</h2>
+      <div id="status" class="status info">급식 정보를 확인하고 있습니다.</div>
+    </section>
+
+    <section id="mealCard" class="card hidden">
+      <h2 class="section-title">오늘의 메뉴</h2>
+      <div id="mealContent"></div>
+    </section>
+
+    <section id="nutritionCard" class="card hidden">
+      <h2 class="section-title">영양 정보</h2>
+      <div id="nutritionContent" class="info-line"></div>
+    </section>
+
+    <section id="originCard" class="card hidden">
+      <h2 class="section-title">원산지 정보</h2>
+      <div id="originContent" class="info-line"></div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">알레르기 유발 식품</h2>
+      <div id="allergyGrid" class="allergy-grid"></div>
+    </section>
+  </main>
+
+  <script>
+    const ATPT_OFCDC_SC_CODE = "J10";
+    const SD_SCHUL_CODE = "7530189";
+
+    const MEAL_API = "https://open.neis.go.kr/hub/mealServiceDietInfo";
+    const SCHEDULE_API = "https://open.neis.go.kr/hub/SchoolSchedule";
+
+    const dateInput = document.getElementById("dateInput");
+    const statusBox = document.getElementById("status");
+
+    const mealCard = document.getElementById("mealCard");
+    const nutritionCard = document.getElementById("nutritionCard");
+    const originCard = document.getElementById("originCard");
+
+    const mealContent = document.getElementById("mealContent");
+    const nutritionContent = document.getElementById("nutritionContent");
+    const originContent = document.getElementById("originContent");
+    const allergyGrid = document.getElementById("allergyGrid");
+
+    const allergyNames = {
+      1: "난류", 2: "우유", 3: "메밀", 4: "땅콩", 5: "대두",
+      6: "밀", 7: "고등어", 8: "게", 9: "새우", 10: "돼지고기",
+      11: "복숭아", 12: "토마토", 13: "아황산류", 14: "호두",
+      15: "닭고기", 16: "쇠고기", 17: "오징어", 18: "조개류", 19: "잣"
+    };
+
+    let requestNumber = 0;
+
+    function localDateString(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function toYmd(dateString) {
+      return dateString.replaceAll("-", "");
+    }
+
+    function formatMonth(dateString) {
+      return `${Number(dateString.slice(5, 7))}월`;
+    }
+
+    function setStatus(message, type = "info") {
+      statusBox.className = `status ${type}`;
+      statusBox.textContent = message;
+    }
+
+    function hideMealDetails() {
+      mealCard.classList.add("hidden");
+      nutritionCard.classList.add("hidden");
+      originCard.classList.add("hidden");
+      mealContent.replaceChildren();
+      nutritionContent.replaceChildren();
+      originContent.replaceChildren();
+    }
+
+    // XML 응답에서 실제 데이터 행을 추출한다.
+    function parseXml(xmlText) {
+      const xml = new DOMParser().parseFromString(
+        xmlText, "application/xml"
+      );
+
+      if (xml.querySelector("parsererror")) {
+        throw new Error("서버 응답을 읽을 수 없습니다.");
+      }
+
+      const code = xml.getElementsByTagName("CODE")[0]?.textContent?.trim();
+      const message =
+        xml.getElementsByTagName("MESSAGE")[0]?.textContent?.trim();
+
+      if (code && code !== "INFO-000") {
+        if (code === "INFO-200") return [];
+        throw new Error(message || `API 오류: ${code}`);
+      }
+
+      return Array.from(xml.getElementsByTagName("row")).map(row => {
+        const item = {};
+        Array.from(row.children).forEach(cell => {
+          item[cell.tagName] = cell.textContent.trim();
+        });
+        return item;
+      });
+    }
+
+    async function fetchRows(url) {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`서버 연결 오류 (${response.status})`);
+      }
+
+      return parseXml(await response.text());
+    }
+
+    function baseParams() {
+      return `ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}` +
+        `&SD_SCHUL_CODE=${SD_SCHUL_CODE}&Type=xml`;
+    }
+
+    // 핵심 수정: 선택한 날짜만 직접 조회한다.
+    // 인증키가 없어도 월간 응답의 첫 5건에 의존하지 않는다.
+    function dailyMealUrl(dateString) {
+      return `${MEAL_API}?${baseParams()}` +
+        `&MLSV_YMD=${toYmd(dateString)}`;
+    }
+
+    // 월간 조회는 해당 월에 식단 데이터가 있는지 확인할 때만 사용한다.
+    // 이 결과에서 선택한 날짜의 메뉴를 찾으려고 하지 않는다.
+    function monthMealUrl(dateString) {
+      const ymd = toYmd(dateString);
+      const year = Number(ymd.slice(0, 4));
+      const month = Number(ymd.slice(4, 6));
+      const lastDay = new Date(year, month, 0).getDate();
+
+      return `${MEAL_API}?${baseParams()}` +
+        `&MLSV_FROM_YMD=${ymd.slice(0, 6)}01` +
+        `&MLSV_TO_YMD=${ymd.slice(0, 6)}${String(lastDay).padStart(2, "0")}`;
+    }
+
+    function scheduleUrl(dateString) {
+      const ymd = toYmd(dateString);
+      return `${SCHEDULE_API}?${baseParams()}` +
+        `&AA_FROM_YMD=${ymd}&AA_TO_YMD=${ymd}&pIndex=1&pSize=100`;
+    }
+
+    function renderAllergyGrid() {
+      allergyGrid.replaceChildren();
+
+      Object.entries(allergyNames).forEach(([number, name]) => {
+        const item = document.createElement("div");
+        item.className = "allergy-item";
+
+        const badge = document.createElement("span");
+        badge.className = "allergy-number";
+        badge.textContent = number;
+
+        const label = document.createElement("span");
+        label.className = "allergy-name";
+        label.textContent = name;
+
+        item.append(badge, label);
+        allergyGrid.appendChild(item);
+      });
+    }
+
+    function parseMenuItems(dishText) {
+      return dishText
+        .split(/<br\s*\/?>/i)
+        .map(item => item.trim())
+        .filter(Boolean)
+        .map(item => {
+          const allergies = [];
+
+          const name = item.replace(/\(([\d.]+)\)/g, (_, group) => {
+            group.split(".").forEach(value => {
+              const number = Number(value);
+              if (
+                Number.isInteger(number) &&
+                number >= 1 &&
+                number <= 19 &&
+                !allergies.includes(number)
+              ) {
+                allergies.push(number);
+              }
+            });
+            return "";
+          }).trim();
+
+          return { name, allergies };
+        });
+    }
+
+    function renderMeals(rows) {
+      hideMealDetails();
+      if (!rows.length) return;
+
+      mealCard.classList.remove("hidden");
+
+      const groupedMeals = new Map();
+
+      rows.forEach(row => {
+        const type = row.MMEAL_SC_NM || "급식";
+        if (!groupedMeals.has(type)) groupedMeals.set(type, []);
+        groupedMeals.get(type).push(row);
+      });
+
+      groupedMeals.forEach((meals, type) => {
+        const badge = document.createElement("div");
+        badge.className = "meal-type";
+        badge.textContent = type;
+
+        const list = document.createElement("ul");
+        list.className = "menu-list";
+
+        meals.forEach(meal => {
+          parseMenuItems(meal.DDISH_NM || "").forEach(menu => {
+            const li = document.createElement("li");
+
+            const name = document.createElement("span");
+            name.className = "menu-name";
+            name.textContent = menu.name;
+            li.appendChild(name);
+
+            menu.allergies.forEach(number => {
+              const tag = document.createElement("span");
+              tag.className = "allergy-tag";
+              tag.textContent = `${number}. ${allergyNames[number]}`;
+              li.appendChild(tag);
+            });
+
+            list.appendChild(li);
+          });
+        });
+
+        mealContent.append(badge, list);
+      });
+
+      const nutrition = [...new Set(rows.map(r => r.CAL_INFO).filter(Boolean))];
+      if (nutrition.length) {
+        nutritionCard.classList.remove("hidden");
+        nutritionContent.textContent = nutrition.join(" / ");
+      }
+
+      const origins = [...new Set(rows.map(r => r.ORPLC_INFO).filter(Boolean))];
+      if (origins.length) {
+        originCard.classList.remove("hidden");
+        originContent.textContent = origins.join(" / ");
+      }
+    }
+
+    function getSemester(dateString) {
+      const month = Number(dateString.slice(5, 7));
+      return month >= 3 && month <= 7 ? "1학기" : "2학기";
+    }
+
+    function explainNoMeal(scheduleRows, dateString) {
+      if (!scheduleRows.length) {
+        setStatus("해당 날짜에는 급식이 없습니다.", "warning");
+        return;
+      }
+
+      const events = scheduleRows.map(row => ({
+        name: (row.EVENT_NM || "").trim(),
+        content: (row.EVENT_CNTNT || "").trim()
+      })).filter(event => event.name || event.content);
+
+      if (!events.length) {
+        setStatus("해당 날짜에는 급식이 없습니다.", "warning");
+        return;
+      }
+
+      const text = events
+        .map(event => `${event.name} ${event.content}`)
+        .join(" ");
+
+      if (/오전\s*(귀가|하교)|오전귀가|오전하교/.test(text)) {
+        setStatus("오전 귀가 일정으로 급식이 없습니다.", "warning");
+        return;
+      }
+
+      const exam = text.match(
+        /(\d+)\s*차\s*(정기시험|정기고사|지필평가)/
+      );
+
+      if (exam) {
+        setStatus(
+          `${getSemester(dateString)} ${exam[1]}차 정기시험으로 급식이 없습니다.`,
+          "warning"
+        );
+        return;
+      }
+
+      if (/정기시험|정기고사|지필평가/.test(text)) {
+        setStatus(
+          `${getSemester(dateString)} 정기시험으로 급식이 없습니다.`,
+          "warning"
+        );
+        return;
+      }
+
+      const event = events[0];
+      const name = event.name || event.content;
+
+      if (/방학/.test(text)) {
+        setStatus(`${name || "방학"}으로 급식이 없습니다.`, "warning");
+      } else if (/재량휴업|휴업일/.test(text)) {
+        setStatus(`${name || "휴업일"}로 급식이 없습니다.`, "warning");
+      } else if (/개교기념일/.test(text)) {
+        setStatus("개교기념일로 급식이 없습니다.", "warning");
+      } else {
+        setStatus(`${name} 일정이 있습니다.`, "warning");
+      }
+    }
+
+    async function searchMeal() {
+      const selectedDate = dateInput.value;
+
+      if (!selectedDate) {
+        setStatus("조회할 날짜를 선택해 주세요.", "error");
+        return;
+      }
+
+      const thisRequest = ++requestNumber;
+      hideMealDetails();
+
+      const date = new Date(`${selectedDate}T12:00:00`);
+      const day = date.getDay();
+
+      if (day === 0 || day === 6) {
+        setStatus("주말에는 급식이 없습니다.", "warning");
+        return;
+      }
+
+      setStatus("급식 정보를 확인하고 있습니다.", "info");
+
+      try {
+        // 1. 선택 날짜 직접 조회와 월간 데이터 확인을 동시에 실행한다.
+        const [dailyRows, monthRows] = await Promise.all([
+          fetchRows(dailyMealUrl(selectedDate)),
+          fetchRows(monthMealUrl(selectedDate))
+        ]);
+
+        if (thisRequest !== requestNumber) return;
+
+        // 2. 선택 날짜에 메뉴가 있으면 바로 표시한다.
+        if (dailyRows.length) {
+          renderMeals(dailyRows);
+          setStatus("급식 정보를 불러왔습니다.", "success");
+          return;
+        }
+
+        // 3. 월간 조회 결과가 비어 있을 때만 미공개 안내를 한다.
+        //    단, 날짜 직접 조회가 우선이므로 해당 날짜의 메뉴를 놓치지 않는다.
+        if (!monthRows.length) {
+          setStatus(
+            `${formatMonth(selectedDate)} 식단표가 아직 공개되지 않았습니다.`,
+            "info"
+          );
+          return;
+        }
+
+        // 4. 월간 식단은 있지만 선택 날짜의 메뉴가 없다면 학사일정을 확인한다.
+        const scheduleRows = await fetchRows(scheduleUrl(selectedDate));
+
+        if (thisRequest !== requestNumber) return;
+        explainNoMeal(scheduleRows, selectedDate);
+
+      } catch (error) {
+        if (thisRequest !== requestNumber) return;
+
+        setStatus(
+          `정보를 불러오지 못했습니다. ${error.message || "잠시 후 다시 시도해 주세요."}`,
+          "error"
+        );
+      }
+    }
+
+    function moveWeekday(direction) {
+      const date = dateInput.value
+        ? new Date(`${dateInput.value}T12:00:00`)
+        : new Date();
+
+      do {
+        date.setDate(date.getDate() + direction);
+      } while (date.getDay() === 0 || date.getDay() === 6);
+
+      dateInput.value = localDateString(date);
+      searchMeal();
+    }
+
+    document.getElementById("prevButton").addEventListener("click", () => {
+      moveWeekday(-1);
+    });
+
+    document.getElementById("nextButton").addEventListener("click", () => {
+      moveWeekday(1);
+    });
+
+    document.getElementById("todayButton").addEventListener("click", () => {
+      dateInput.value = localDateString();
+      searchMeal();
+    });
+
+    document.getElementById("searchButton").addEventListener("click", searchMeal);
+    dateInput.addEventListener("change", searchMeal);
+
+    dateInput.value = localDateString();
+    renderAllergyGrid();
+    searchMeal();
+  </script>
+</body>
+</html>
+```
